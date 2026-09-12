@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html ng-app="agriApp">
+
+<head>
+<meta charset="UTF-8">
+<title>Smart Agritech Dashboard</title>
+
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+/* SAME CSS (NO CHANGE) */
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+min-height:100vh;
+padding:20px;
+color:#dff6ff;
+transition:0.4s;
+display:flex;
+flex-direction:column;
+}
+
+body.light-mode{
+background:linear-gradient(135deg,#e6f7ff,#cceeff,#dff6ff);
+color:#023047;
+}
+
+/* HEADER */
+
+.header{
+position:relative;
+display:flex;
+align-items:center;
+justify-content:center;
+margin-bottom:25px;
+padding:15px;
+border-radius:20px;
+background:rgba(0, 180, 255, 0.12);
+backdrop-filter:blur(20px);
+border:1px solid rgba(0,200,255,0.4);
+box-shadow:0 0 15px rgba(0,200,255,0.4),
+inset 0 0 10px rgba(0,200,255,0.2);
+}
+
+.header h1{
+font-size:22px;
+letter-spacing:2px;
+color:#8be9fd;
+text-shadow:0 0 12px rgba(139,233,253,0.9);
+}
+
+body.light-mode .header{
+background:rgba(255,255,255,0.6);
+border:1px solid rgba(0,150,255,0.4);
+}
+
+body.light-mode .header h1{
+color:#0077b6;
+}
+
+/* TOGGLE */
+
+.toggle{
+padding:8px 16px;
+border-radius:20px;
+border:none;
+cursor:pointer;
+background:linear-gradient(135deg,#00c6ff,#0072ff);
+color:white;
+font-size:12px;
+}
+
+.toggle-bar{
+display:flex;
+justify-content:flex-start;
+margin-bottom:20px;
+padding-left:5px;
+}
+
+/* GRID */
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr 1fr;
+gap:20px;
+flex:1;
+}
+
+/* CARDS */
+
+.card{
+background:rgba(0, 180, 255, 0.08);
+backdrop-filter:blur(18px);
+border-radius:18px;
+padding:20px;
+border:1px solid rgba(0,200,255,0.4);
+}
+
+body.light-mode .card{
+background:rgba(255,255,255,0.5);
+}
+
+/* INPUTS */
+
+input,select{
+width:100%;
+padding:10px;
+border-radius:10px;
+margin-top:8px;
+margin-bottom:10px;
+outline:none;
+border:1px solid rgba(0,200,255,0.3);
+}
+
+/* DARK SELECT */
+
+select{
+background:rgba(0, 40, 60, 0.95);
+color:#dff6ff;
+}
+
+select option{
+background:#0f2e2a;
+color:#dff6ff;
+}
+
+/* LIGHT MODE */
+
+body.light-mode select{
+background:white;
+color:#023047;
+}
+
+/* BUTTON */
+
+button{
+width:100%;
+padding:10px;
+border:none;
+border-radius:10px;
+background:linear-gradient(135deg,#00c6ff,#0072ff);
+color:white;
+}
+
+/* RESULT */
+
+.result{
+margin-top:10px;
+padding:10px;
+border-radius:10px;
+background:rgba(0,200,255,0.15);
+}
+
+/* TABLE */
+
+table{
+width:100%;
+margin-top:10px;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+}
+
+.full{
+grid-column:1/4;
+}
+
+/* FOOTER */
+
+.footer{
+text-align:center;
+margin-top:25px;
+padding:12px;
+}
+
+/* MOBILE */
+
+@media(max-width:900px){
+.grid{
+grid-template-columns:1fr;
+}
+.full{
+grid-column:1/2;
+}
+}
+
+</style>
+</head>
+
+<body ng-controller="agriController">
+
+<div class="header">
+<h1>🌿 SMART AGRITECH DASHBOARD</h1>
+</div>
+
+<div class="toggle-bar">
+<button class="toggle" onclick="toggleMode()">🌙 / ☀️</button>
+</div>
+
+<div class="grid">
+
+<!-- WEATHER -->
+<div class="card">
+<h2>Today's Status</h2>
+<p>🌤 Temp: {{weather.temp}}°C {{weatherEmoji}}</p>
+<p>💧 Humidity: {{weather.humidity}}%</p>
+<p>Condition: {{weather.condition}}</p>
+<button ng-click="getWeather()">UPDATE DATA</button>
+</div>
+
+<!-- CROP -->
+<div class="card">
+<h2>Crop Intelligence</h2>
+
+<select ng-model="soil">
+<option value="" disabled selected>Select Soil Type</option>
+<option>Sandy Loam</option>
+<option>Clay</option>
+<option>Black Soil</option>
+</select>
+
+<select ng-model="season">
+<option value="" disabled selected>Select Season</option>
+<option>Summer</option>
+<option>Winter</option>
+<option>Monsoon</option>
+</select>
+
+<button ng-click="recommendCrop()">GET RECOMMENDATION</button>
+
+<div class="result" ng-if="recommendedCrop">
+{{recommendedCrop}}
+</div>
+</div>
+
+<!-- YIELD -->
+<div class="card">
+<h2>Calculated Insights</h2>
+
+<input type="number" placeholder="Enter Area in Acres" ng-model="acres">
+
+<select ng-model="selectedCrop">
+<option value="" disabled selected>Select Crop</option>
+<option>Wheat</option>
+<option>Rice</option>
+<option>Cotton</option>
+<option>Soybean</option>
+</select>
+
+<button ng-click="calculateYield()">CALCULATE YIELD</button>
+
+<div class="result" ng-if="totalYield">
+Total Yield: {{totalYield}} kg
+</div>
+</div>
+
+<!-- MARKET -->
+<div class="card full">
+<h2>Market Performance</h2>
+
+<button ng-click="loadMarketPrices()">LOAD PRICES</button>
+
+<table>
+<tr>
+<th>Crop</th>
+<th>Market</th>
+<th>Price</th>
+</tr>
+
+<tr ng-repeat="c in crops">
+<td>{{c.commodity}}</td>
+<td>{{c.market}}</td>
+<td>{{c.modal_price}}</td>
+</tr>
+</table>
+</div>
+
+<!-- FERTILIZER -->
+<div class="card">
+<h2>Crop & Soil Intelligence</h2>
+
+<select ng-model="fertCrop">
+<option value="" disabled selected>Select Crop for Fertilizer</option>
+<option>Wheat</option>
+<option>Rice</option>
+<option>Cotton</option>
+<option>Soybean</option>
+</select>
+
+<button ng-click="suggestFertilizer()">GET SUGGESTION</button>
+
+<div class="result" ng-if="fertilizer">
+{{fertilizer}}
+</div>
+</div>
+
+<!-- TASK -->
+<div class="card">
+<h2>Operations Timeline</h2>
+
+<input type="text" ng-model="taskText" placeholder="Enter new farm task...">
+
+<button ng-click="addTask()">ADD</button>
+
+<div class="task" ng-repeat="t in tasks">
+<div>
+{{t}}
+<div class="progress"><span style="width:60%"></span></div>
+</div>
+<button ng-click="removeTask($index)">✔</button>
+</div>
+
+</div>
+
+</div>
+
+<div class="footer">
+© 2026 Smart Agritech Dashboard | Designed by CO6k 🧑‍🎓📚
+</div>
+
+<script>
+
+function toggleMode(){
+document.body.classList.toggle("light-mode");
+}
+
+var app = angular.module("agriApp",[]);
+app.controller("agriController",function($scope,$http){
+
+$scope.weather={temp:"--",humidity:"--",condition:"--"};
+$scope.weatherEmoji="🌤";
+
+$scope.getWeather=function(){
+var api="https://api.openweathermap.org/data/2.5/weather?q=Nashik&units=metric&appid=10324d92da2b4bc0e70c0ff1ad24ab37";
+$http.get(api).then(function(response){
+$scope.weather.temp=response.data.main.temp;
+$scope.weather.humidity=response.data.main.humidity;
+$scope.weather.condition=response.data.weather[0].description;
+
+var c=$scope.weather.condition.toLowerCase();
+$scope.weatherEmoji=c.includes("clear")?"☀":c.includes("cloud")?"☁":c.includes("rain")?"🌧":"🌤";
+});
+};
+
+$scope.recommendCrop=function(){
+if($scope.soil=="Sandy Loam" && $scope.season=="Summer")
+$scope.recommendedCrop="Corn 🌽";
+else if($scope.season=="Monsoon")
+$scope.recommendedCrop="Rice 🍚";
+else
+$scope.recommendedCrop="Wheat 🌾";
+};
+
+$scope.yieldData={Wheat:3000,Rice:3500,Cotton:2000,Soybean:2500};
+
+$scope.calculateYield=function(){
+$scope.totalYield=$scope.acres * $scope.yieldData[$scope.selectedCrop];
+};
+
+$scope.loadMarketPrices=function(){
+var api="https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?api-key=579b464db66ec23bdd0000018ea911cc0bc84bd3719b332a13da19f6&format=json&limit=10";
+$http.get(api).then(function(response){
+$scope.crops=response.data.records;
+});
+};
+
+$scope.suggestFertilizer=function(){
+var fert={
+"Wheat":"Nitrogen 120 kg/acre",
+"Rice":"Urea 100 kg/acre",
+"Cotton":"NPK 150 kg/acre",
+"Soybean":"DAP 80 kg/acre"
+};
+$scope.fertilizer=fert[$scope.fertCrop];
+};
+
+$scope.tasks=["Irrigate the corn field","Check for pests","Fertilize with nitrogen"];
+
+$scope.addTask=function(){
+$scope.tasks.push($scope.taskText);
+$scope.taskText="";
+};
+
+$scope.removeTask=function(i){
+$scope.tasks.splice(i,1);
+};
+
+});
+
+</script>
+
+</body>
+</html>
